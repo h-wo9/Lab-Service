@@ -1,221 +1,124 @@
-import { useState, useEffect } from 'react';
 import { 
-  Container, Typography, Paper, Box, Divider, List, ListItem, ListItemText, 
-  Avatar, CircularProgress, Fab, Dialog, DialogTitle, DialogContent, 
-  DialogActions, Button, TextField, Badge
+  Box, Typography, Button, Paper, List, ListItem, 
+  Avatar, Divider, Chip 
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import EventIcon from '@mui/icons-material/Event';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { PickerDay } from '@mui/x-date-pickers';
+import EventNoteIcon from '@mui/icons-material/EventNote';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
 import dayjs from 'dayjs';
-import api from './api';
-
-function ServerDay(props) {
-  const { highlightedDays = [], day, outsideCurrentMonth, ...other } = props;
-
-  // 일정이 있는 날짜인지 확인
-  const isSelected =
-    !props.outsideCurrentMonth && highlightedDays.indexOf(day.format('YYYY-MM-DD')) >= 0;
-
-  return (
-    <Badge
-      key={props.day.toString()}
-      overlap="circular"
-      anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-      badgeContent={
-        isSelected ? (
-          <Box
-            sx={{
-              width: 6,
-              height: 6,
-              borderRadius: '50%',
-              bgcolor: '#a65cb3',
-            }}
-          />
-        ) : undefined
-      }
-      sx={{
-        '& .MuiBadge-badge': {
-          right: '50%',
-          transform: 'translateX(50%)',
-          bottom: '4px',
-          padding: 0,
-          minWidth: 'auto',
-          height: 'auto',
-          pointerEvents: 'none', // 점을 클릭해도 날짜가 클릭되도록 방해 금지
-        }
-      }}
-    >
-      <PickerDay {...other} outsideCurrentMonth={outsideCurrentMonth} day={day} />
-    </Badge>
-  );
-}
 
 function Schedule() {
-  const [selectedDate, setSelectedDate] = useState(dayjs());
-  const [labName, setLabName] = useState('');
-  const [loading, setLoading] = useState(true);
-  
-  const [open, setOpen] = useState(false);
-  const [newSchedule, setNewSchedule] = useState({
-    title: '',
-    description: '',
-    date: dayjs()
-  });
-
-  // 일정 목록 상태
-  const [schedules, setSchedules] = useState([
-    { id: 1, date: dayjs().format('YYYY-MM-DD'), title: '랩실 주간 회의', description: '오후 2시, 본관 세미나실' },
-    { id: 2, date: dayjs().add(3, 'day').format('YYYY-MM-DD'), title: '프로젝트 중간 점검', description: '온라인 진행' },
-  ]);
-
-  useEffect(() => {
-    const fetchLabInfo = async () => {
-      try {
-        const response = await api.get('/labs/my-lab');
-        setLabName(response.data.name);
-      } catch (error) {
-        setLabName('랩실');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchLabInfo();
-  }, []);
-
-  const handleOpen = () => setOpen(true);
-  const handleClose = () => {
-    setOpen(false);
-    setNewSchedule({ title: '', description: '', date: dayjs() });
-  };
-
-  const handleSubmit = () => {
-    if (!newSchedule.title) return alert("일정 제목을 입력해주세요.");
-    
-    const newItem = {
-      id: Date.now(),
-      title: newSchedule.title,
-      description: newSchedule.description,
-      date: newSchedule.date.format('YYYY-MM-DD')
-    };
-
-    setSchedules([...schedules, newItem]);
-    handleClose();
-  };
-
-  const selectedDateStr = selectedDate.format('YYYY-MM-DD');
-  const todayEvents = schedules.filter(event => event.date === selectedDateStr);
-
-  // 점을 찍어줄 날짜들의 목록 (문자열 배열)
-  const highlightedDays = schedules.map(s => s.date);
-
-  if (loading) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 10 }}>
-        <CircularProgress color="primary" />
-      </Box>
-    );
-  }
+  // 임시 일정 데이터
+  const schedules = [
+    { 
+      id: 1, 
+      date: dayjs().format('YYYY-MM-DD'), 
+      time: '14:00 - 16:00', 
+      title: '랩실 주간 회의', 
+      location: '제1세미나실',
+      type: '회의'
+    },
+    { 
+      id: 2, 
+      date: dayjs().add(1, 'day').format('YYYY-MM-DD'), 
+      time: '10:00 - 11:30', 
+      title: '김교수님 개별 면담 (홍길동)', 
+      location: '교수님 연구실',
+      type: '면담'
+    },
+    { 
+      id: 3, 
+      date: dayjs().add(3, 'day').format('YYYY-MM-DD'), 
+      time: '16:00 - 18:00', 
+      title: '프로젝트 중간 점검 세미나', 
+      location: '랩실 메인 테이블',
+      type: '세미나'
+    },
+  ];
 
   return (
-    <Container maxWidth="md" sx={{ position: 'relative', pb: 8 }}>
-      <Typography variant="h5" fontWeight="bold" sx={{ mb: 3, ml: 1, color: 'primary.dark' }}>
-        {labName ? `${labName} 일정 관리` : '일정 관리'}
-      </Typography>
-
-      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3 }}>
-        <Paper elevation={3} sx={{ p: 2, borderRadius: 4, background: 'rgba(255, 255, 255, 0.9)' }}>
-          <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <DateCalendar 
-              value={selectedDate} 
-              onChange={(newDate) => setSelectedDate(newDate)} 
-              slots={{ day: ServerDay }}
-              slotProps={{
-                day: {
-                  highlightedDays: highlightedDays, // 일정이 있는 날짜 배열 전달
-                },
-              }}
-              sx={{
-                '& .MuiPickersDay-root.Mui-selected': { backgroundColor: 'primary.main' }
-              }}
-            />
-          </LocalizationProvider>
-        </Paper>
-
-        <Paper elevation={3} sx={{ p: 3, borderRadius: 4, flexGrow: 1, background: 'rgba(255, 255, 255, 0.9)' }}>
-          <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>
-            {selectedDate.format('YYYY년 MM월 DD일')} 일정
+    <Box sx={{ width: '100%', maxWidth: '1200px', mx: 'auto', px: { xs: 2, md: 3 }, py: 4 }}>
+      
+      {/* 🌸 상단 헤더 영역 (제목 & 추가 버튼) */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+        <Box>
+          <Typography variant="h4" fontWeight="bold" sx={{ color: 'primary.dark', mb: 1 }}>
+            일정 확인하기
           </Typography>
-          <Divider sx={{ mb: 2 }} />
-
-          {todayEvents.length > 0 ? (
-            <List>
-              {todayEvents.map((event) => (
-                <ListItem key={event.id} sx={{ px: 0 }}>
-                  <Avatar sx={{ bgcolor: 'primary.light', mr: 2 }}>
-                    <EventIcon />
-                  </Avatar>
-                  <ListItemText 
-                    primary={<Typography fontWeight="bold">{event.title}</Typography>} 
-                    secondary={event.description} 
-                  />
-                </ListItem>
-              ))}
-            </List>
-          ) : (
-            <Typography color="text.secondary" sx={{ textAlign: 'center', mt: 5 }}>
-              이날은 예정된 일정이 없습니다.
-            </Typography>
-          )}
-        </Paper>
+          <Typography variant="subtitle1" color="text.secondary">
+            랩실의 주요 회의, 세미나, 면담 일정을 확인하고 관리하세요.
+          </Typography>
+        </Box>
+        
+        <Button 
+          variant="contained" 
+          startIcon={<AddIcon />}
+          sx={{ 
+            borderRadius: 2, 
+            px: 3, 
+            py: 1, 
+            fontWeight: 'bold',
+            boxShadow: '0 4px 14px rgba(156, 39, 176, 0.3)'
+          }}
+        >
+          새 일정 추가
+        </Button>
       </Box>
 
-      <Fab 
-        color="primary" 
-        onClick={handleOpen}
-        sx={{ position: 'fixed', bottom: 32, right: 32 }}
-      >
-        <AddIcon />
-      </Fab>
+      {/* 📅 일정 리스트 영역 */}
+      <Paper elevation={0} sx={{ borderRadius: 4, bgcolor: 'white', border: '1px solid #f0f0f0', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.02)' }}>
+        <List disablePadding>
+          {schedules.map((schedule, index) => (
+            <Box key={schedule.id}>
+              <ListItem sx={{ p: 3, display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'flex-start', sm: 'center' }, gap: 3 }}>
+                
+                {/* 왼쪽: 날짜 정보 */}
+                <Box sx={{ minWidth: '120px', textAlign: { xs: 'left', sm: 'center' } }}>
+                  <Typography variant="h5" fontWeight="bold" color="primary.main">
+                    {dayjs(schedule.date).format('DD')}일
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" fontWeight="bold">
+                    {dayjs(schedule.date).format('YYYY. MM.')}
+                  </Typography>
+                  {schedule.date === dayjs().format('YYYY-MM-DD') && (
+                    <Chip label="오늘" color="error" size="small" sx={{ mt: 1, fontWeight: 'bold' }} />
+                  )}
+                </Box>
 
-      <Dialog open={open} onClose={handleClose} fullWidth maxWidth="xs">
-        <DialogTitle sx={{ fontWeight: 'bold', color: 'primary.main' }}>새 일정 추가</DialogTitle>
-        <DialogContent dividers>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
-            <TextField
-              label="일정 제목"
-              fullWidth
-              value={newSchedule.title}
-              onChange={(e) => setNewSchedule({...newSchedule, title: e.target.value})}
-            />
-            <TextField
-              label="상세 설명"
-              fullWidth
-              multiline
-              rows={2}
-              value={newSchedule.description}
-              onChange={(e) => setNewSchedule({...newSchedule, description: e.target.value})}
-            />
-            <LocalizationProvider dateAdapter={AdapterDayjs}>
-              <DatePicker
-                label="날짜 선택"
-                value={newSchedule.date}
-                onChange={(newValue) => setNewSchedule({...newSchedule, date: newValue})}
-                slotProps={{ textField: { fullWidth: true } }}
-              />
-            </LocalizationProvider>
-          </Box>
-        </DialogContent>
-        <DialogActions sx={{ p: 2 }}>
-          <Button onClick={handleClose} color="inherit">취소</Button>
-          <Button onClick={handleSubmit} variant="contained" sx={{ fontWeight: 'bold' }}>추가하기</Button>
-        </DialogActions>
-      </Dialog>
-    </Container>
+                {/* 중앙: 일정 아이콘 & 디테일 */}
+                <Box sx={{ flexGrow: 1, display: 'flex', gap: 2, alignItems: 'flex-start' }}>
+                  <Avatar sx={{ bgcolor: 'rgba(156, 39, 176, 0.1)', color: 'primary.main', width: 48, height: 48 }}>
+                    <EventNoteIcon />
+                  </Avatar>
+                  <Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                      <Chip label={schedule.type} size="small" sx={{ bgcolor: '#f3e5f5', color: 'primary.dark', fontWeight: 'bold' }} />
+                      <Typography variant="h6" fontWeight="bold">
+                        {schedule.title}
+                      </Typography>
+                    </Box>
+                    
+                    <Box sx={{ display: 'flex', gap: 2, color: 'text.secondary', mt: 1 }}>
+                      <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        <AccessTimeIcon fontSize="small" /> {schedule.time}
+                      </Typography>
+                      <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        <LocationOnIcon fontSize="small" /> {schedule.location}
+                      </Typography>
+                    </Box>
+                  </Box>
+                </Box>
+
+              </ListItem>
+              {/* 마지막 아이템이 아니면 구분선 추가 */}
+              {index < schedules.length - 1 && <Divider />}
+            </Box>
+          ))}
+        </List>
+      </Paper>
+      
+    </Box>
   );
 }
 
