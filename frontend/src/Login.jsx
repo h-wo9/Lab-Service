@@ -40,7 +40,7 @@ function Login() {
           backgroundColor: 'rgba(255, 255, 255, 0.9)' // 살짝 투명하게
         }}>
           <Typography component="h1" variant="h4" sx={{ fontWeight: 800, mb: 1, color: 'primary.main' }}>
-            🎓
+            
           </Typography>
           <Typography component="h1" variant="h5" sx={{ fontWeight: 'bold', mb: 4 }}>
             랩실 관리 시스템

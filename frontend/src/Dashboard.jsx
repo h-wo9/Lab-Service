@@ -8,7 +8,7 @@ import GroupsIcon from '@mui/icons-material/Groups';
 import dayjs from 'dayjs';
 
 function Dashboard() {
-  const userName = '홍길동'; 
+  const userName = 'ㅇㅇㅇ'; 
   const totalBalance = 150000;
   const memberCount = 8;
 
@@ -24,12 +24,14 @@ function Dashboard() {
   ];
 
   return (
-    <Box sx={{ width: '100%', maxWidth: '1100px', mx: 'auto', px: { xs: 2, md: 3 }, py: 4 }}> 
+    // maxWidth: '1200px'를 추가해서 모니터가 커도 카드가 1200px 이상 늘어나지 않게 고정
+    // mx: 'auto'를 추가해서 남는 공간이 생기면 화면을 가운데 정렬
+    <Box sx={{ width: '100%', maxWidth: '1200px', mx: 'auto', px: { xs: 2, md: 3 }, py: 4 }}> 
       
       {/* 환영 배너 */}
       <Box sx={{ mb: 4, display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
         <Typography variant="h4" fontWeight="bold" sx={{ color: 'primary.dark', mb: 1 }}>
-          환영합니다, {userName}님!
+          환영합니다, {userName}님! 👋
         </Typography>
         <Typography variant="subtitle1" color="text.secondary">
           오늘도 활기찬 하루 보내세요. 현재 랩실 현황을 요약해 드릴게요.
@@ -47,7 +49,7 @@ function Dashboard() {
       >
         {/* 요약 위젯 1: 총 잔액 */}
         <Paper elevation={0} sx={{ p: 4, borderRadius: 4, background: 'linear-gradient(135deg, #673ab7 0%, #9c27b0 100%)', color: 'white', boxShadow: '0 4px 20px rgba(103, 58, 183, 0.15)' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 4, mb: 3 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
             <AccountBalanceWalletIcon fontSize="large" />
             <Typography variant="h6" fontWeight="bold">랩실 공금 잔액</Typography>
           </Box>
@@ -114,7 +116,7 @@ function Dashboard() {
         {/* 최근 장부 내역 */}
         <Paper elevation={0} sx={{ p: 4, borderRadius: 4, bgcolor: 'white', border: '1px solid #f0f0f0', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.02)' }}>
           <Typography variant="h6" fontWeight="bold" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-            최근 장부 내역
+            최근 입출금 내역
           </Typography>
           <Divider sx={{ mb: 2 }} />
           <List disablePadding>
