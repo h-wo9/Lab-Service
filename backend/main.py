@@ -66,6 +66,11 @@ def read_root():
 # ==========================================
 # 1. 유저 & 인증 (User & Auth) API
 # ==========================================
+
+@app.get("/users/me", response_model=schemas.UserResponse)
+def get_me(current_user: models.User = Depends(get_current_user)):
+    """현재 로그인한 유저 정보(이름, 학번, lab_id, role)를 반환합니다."""
+    return current_user
 @app.post("/users/signup", response_model=schemas.UserResponse)
 def signup(user: schemas.UserCreate, db: Session = Depends(get_db)):
     """새로운 학생 또는 랩장으로 회원가입합니다. (자물쇠 없음 - 아무나 가능)"""
@@ -104,6 +109,16 @@ def create_lab(
     lab.leader_id = current_user.student_id 
     
     return crud.create_lab(db=db, lab=lab)
+
+@app.get("/labs/my-lab", response_model=schemas.LabWithMembersResponse)
+def get_my_lab(db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    """현재 로그인한 유저가 소속된 랩실 정보(멤버 목록 포함)를 반환합니다."""
+    if current_user.lab_id is None:
+        raise HTTPException(status_code=404, detail="소속된 랩실이 없습니다.")
+    lab = db.query(models.Lab).filter(models.Lab.lab_id == current_user.lab_id).first()
+    if not lab:
+        raise HTTPException(status_code=404, detail="랩실을 찾을 수 없습니다.")
+    return lab
 
 @app.get("/labs", response_model=list[schemas.LabResponse])
 def read_all_labs(db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)):
@@ -154,6 +169,20 @@ def create_schedule(lab_id: int, schedule: schemas.ScheduleCreate, db: Session =
 def get_schedules(lab_id: int, db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)):
     return crud.get_schedules(db, lab_id)
 
+@app.put("/schedules/{schedule_id}", response_model=schemas.ScheduleResponse)
+def update_schedule(schedule_id: int, schedule: schemas.ScheduleCreate, db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)):
+    result = crud.update_schedule(db, schedule_id, schedule)
+    if not result:
+        raise HTTPException(status_code=404, detail="일정을 찾을 수 없습니다.")
+    return result
+
+@app.delete("/schedules/{schedule_id}")
+def delete_schedule(schedule_id: int, db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)):
+    result = crud.delete_schedule(db, schedule_id)
+    if not result:
+        raise HTTPException(status_code=404, detail="일정을 찾을 수 없습니다.")
+    return {"message": "일정이 삭제되었습니다."}
+
 # ==========================================
 # 5. 회비 관리 (Fee) API
 # ==========================================
@@ -191,3 +220,11 @@ def create_finance(lab_id: int, finance: schemas.FinanceCreate, db: Session = De
 def read_finances(lab_id: int, db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)):
     """특정 랩실의 장부 내역을 조회합니다."""
     return crud.get_finances_by_lab(db, lab_id=lab_id)
+
+# ==========================================
+# 7. 통계 분석 (Statistics) API
+# ==========================================
+@app.get("/labs/{lab_id}/stats")
+def get_lab_stats(lab_id: int, db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)):
+    """GROUP BY / SUM / COUNT / JOIN을 활용한 랩실 통계 분석 데이터를 반환합니다."""
+    return crud.get_lab_stats(db, lab_id=lab_id)

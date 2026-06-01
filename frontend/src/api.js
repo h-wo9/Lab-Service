@@ -1,19 +1,26 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:8000', 
+  baseURL: 'http://localhost:8000',
 });
 
-// API를 호출할 때마다 알아서 토큰을 챙겨가는 설정
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
+// 요청마다 localStorage의 토큰을 Authorization 헤더에 자동 첨부
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('access_token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// 401 응답 시 토큰 만료로 간주 → localStorage 초기화 후 로그인 화면으로
+api.interceptors.response.use(
+  (response) => response,
   (error) => {
+    if (error.response?.status === 401) {
+      localStorage.clear();
+      window.location.href = '/';
+    }
     return Promise.reject(error);
   }
 );
